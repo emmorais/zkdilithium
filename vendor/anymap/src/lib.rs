@@ -523,3 +523,9 @@ mod tests {
         assert_debug::<Map<CloneAny + Send + Sync>>();
     }
 }
+
+impl<A: ?Sized + UncheckedAnyExt> Default for Map<A> {
+    fn default() -> Self {
+        Map { raw: RawMap::new() }
+    }
+}

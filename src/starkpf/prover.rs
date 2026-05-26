@@ -383,10 +383,8 @@ fn test_decompose_into_four_squares(){
 #[allow(unused)]
 #[test]
 fn test_decompose_into_four_squares_random(){
-    let mut rng = StdRng::seed_from_u64(42);
-    //let uniform = rand::distributions::Uniform::new(0, 1000000);
+    let mut rng = rand::rng();
     for _ in 0..10 {
-        //let x: i64 = uniform.sample(&mut rng);
         let x = rng.random_range(1..=1000000);
         let squares = decompose_into_four_squares(x);
         println!("Input: {}", x);

@@ -19,6 +19,7 @@ env_logger = { version = "0.9", default-features = false }
 generic_singleton = "0.4.1"
 atomic_refcell = "0.1.9"
 anymap = "0.12.1"
+rand = { version = "0.10.1", features = ["std"] }
 
 [patch.crates-io]
 anymap = { path = "vendor/anymap" }

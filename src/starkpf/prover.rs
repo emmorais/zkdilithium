@@ -1,3 +1,8 @@
+use rand::Rng;
+use rand::RngExt;
+use rand::SeedableRng;
+use rand::rngs::StdRng;
+
 use super::{
     BaseElement, ThinDilAir, FieldElement, ProofOptions, Prover, aux_trace_table::RapTraceTable, TRACE_WIDTH, N, M, air::PublicInputs,
     HASH_CYCLE_LEN, HASH_STATE_WIDTH, HASH_RATE_WIDTH, NUM_HASH_ROUNDS, HASH_DIGEST_WIDTH, ZIND, QIND, RIND, CIND, 
@@ -313,4 +318,85 @@ fn print_field_slice(v: &[BaseElement], n: usize){
         print!("{}, ", v[i]);
     }
     println!("]");
+}
+
+#[allow(unused)]
+fn decompose_into_four_squares(mut n: i64) -> [i64; 4] {
+    assert!(n >= 0, "Input must be non-negative");
+    // Remove factors of 4
+    let mut a = 0;
+    while n % 4 == 0 {
+        n /= 4;
+        a += 1;
+    }
+    // If n mod 8 == 7, subtract 1^2 and try again
+    let mut m = n;
+    let mut squares = [0i64; 4];
+    if m % 8 == 7 {
+        squares[3] = 1;
+        m -= 1;
+    }
+    // Now, try all pairs (i, j) with i^2 + j^2 <= m
+    let limit = (m as f64).sqrt() as i64;
+    'outer: for i in 0..=limit {
+        let i2 = i * i;
+        if i2 > m { break; }
+        for j in 0..=limit {
+            let j2 = j * j;
+            if i2 + j2 > m { break; }
+            let rem = m - i2 - j2;
+            let k = (rem as f64).sqrt() as i64;
+            if i2 + j2 + k * k == m {
+                squares[0] = i;
+                squares[1] = j;
+                squares[2] = k;
+                break 'outer;
+            }
+        }
+    }
+    // Restore factors of 2
+    for s in squares.iter_mut() {
+        *s *= 2_i64.pow(a as u32);
+    }
+    squares
+}
+
+// test the above function
+#[allow(unused)]
+#[test]
+fn test_decompose_into_four_squares(){
+    let x = 123456789;
+    let squares = decompose_into_four_squares(x);
+    println!("Input: {}", x);
+    println!("Output: {:?}", squares);
+    // check each element in squares is indeed a square and that their sum is equal to x
+    let mut sum = 0;
+    for i in 0..4 {
+        assert_eq!(squares[i]*squares[i], squares[i].pow(2), "Element {} is not a square", squares[i]);
+        sum += squares[i]*squares[i];
+    }
+    assert_eq!(sum, x, "Sum of squares {} does not equal input {}", sum, x);
+}
+
+
+// test decomposition into squares with random inputs
+#[allow(unused)]
+#[test]
+fn test_decompose_into_four_squares_random(){
+    let mut rng = StdRng::seed_from_u64(42);
+    //let uniform = rand::distributions::Uniform::new(0, 1000000);
+    for _ in 0..10 {
+        //let x: i64 = uniform.sample(&mut rng);
+        let x = rng.random_range(1..=1000000);
+        let squares = decompose_into_four_squares(x);
+        println!("Input: {}", x);
+        println!("Output: {:?}", squares);
+        // check each element in squares is indeed a square and that their sum is equal to x
+        let mut sum = 0;
+        for i in 0..4 {
+            assert_eq!(squares[i]*squares[i], squares[i].pow(2),    "Element {} is not a square", squares[i]);
+            sum += squares[i]*squares[i];
+        }
+        assert_eq!(sum, x, "Sum of squares {} does not equal input {}", sum, x);
+    }
 }
